@@ -1,8 +1,8 @@
 //
 //  AppDelegate.swift
-//  PhotoGalleryGromFlickr
+//  FlickrPhotoGallery
 //
-//  Created by Navi Vokavis on 8.11.22.
+//  Created by Navi Vokavis on 4.11.22.
 //
 
 import UIKit
