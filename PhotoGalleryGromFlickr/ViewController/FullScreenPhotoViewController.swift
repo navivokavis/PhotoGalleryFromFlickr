@@ -15,7 +15,6 @@ class FullScreenPhotoViewController: UIViewController {
     
     var indexPath: IndexPath!
     
-    
     override func viewDidLoad() {
         super.viewDidLoad()
     }
@@ -63,7 +62,6 @@ class FullScreenPhotoViewController: UIViewController {
     }
     
     func layoutSubviews() {
-        
         imageScrollView.frame = view.bounds
         collectionView.frame = imageScrollView.bounds
         collectionView.center.x = imageScrollView.center.x

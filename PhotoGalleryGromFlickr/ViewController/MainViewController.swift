@@ -24,23 +24,14 @@ class MainViewController: UIViewController {
     let arrowImageView = UIImageView()
     var scrollTop = true
     
+    var customLoaderView = CustomLoaderView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         setup()
         fistresponse()
-        
-        arrowView.layer.cornerRadius = 25
-        arrowView.backgroundColor = .gray
-        
-        arrowImageView.image = UIImage(systemName: "chevron.up.circle.fill")
-        //        arrowImageView.image = arrowImageView.image!.withRenderingMode(.alwaysTemplate)
-        arrowImageView.tintColor = UIColor.white
-        let TapScrollDown = UITapGestureRecognizer(target: self, action: #selector(ScrollToTheTop(_:)))
-        arrowImageView.isUserInteractionEnabled = true
-        arrowImageView.addGestureRecognizer(TapScrollDown)
-        
+
     }
     
     func setup() {
@@ -70,9 +61,23 @@ class MainViewController: UIViewController {
         imageCollectionView.dataSource = self
         imageCollectionView.register(ImagesCollectionViewCell.self, forCellWithReuseIdentifier: ImagesCollectionViewCell.identifier)
         imageCollectionView.scrollsToTop = true
+        imageCollectionView.showsVerticalScrollIndicator = false
         
+        view.addSubview(customLoaderView)
+        customLoaderView.layer.position = self.view.center
+        
+        //MARK: - add button to scroll up
         view.addSubview(arrowView)
         arrowView.addSubview(arrowImageView)
+        
+        arrowView.layer.cornerRadius = 25
+        arrowView.backgroundColor = .gray
+        
+        arrowImageView.image = UIImage(systemName: "chevron.up.circle.fill")
+        arrowImageView.tintColor = UIColor.white
+        let TapScrollDown = UITapGestureRecognizer(target: self, action: #selector(ScrollToTheTop(_:)))
+        arrowImageView.isUserInteractionEnabled = true
+        arrowImageView.addGestureRecognizer(TapScrollDown)
         
     }
     
@@ -89,10 +94,14 @@ class MainViewController: UIViewController {
         arrowImageView.leadingAnchor.constraint(equalTo: arrowView.leadingAnchor, constant: -2).isActive = true
         arrowImageView.bottomAnchor.constraint(equalTo: arrowView.bottomAnchor, constant: 2).isActive = true
         arrowImageView.trailingAnchor.constraint(equalTo: arrowView.trailingAnchor, constant: 2).isActive = true
+        
     }
+    
+    //MARK: - func with first internet response
     
     func fistresponse() {
         apiCaller.request { [weak self] (result) in
+            self!.customLoaderView.alpha = 1
             switch result {
             case .success(let apiResponse):
                 photoModels = apiResponse.photos.photo.compactMap({
@@ -103,7 +112,7 @@ class MainViewController: UIViewController {
                     )
                 })
                 self?.imageCollectionView.reloadData()
-                
+                self!.customLoaderView.alpha = 0
                 DispatchQueue.main.async {
                     print(photoModels.count)
                 }
@@ -112,6 +121,8 @@ class MainViewController: UIViewController {
             }
         }
     }
+    
+    //MARK: - Create Collection View Layout
     
     func createLayout() -> UICollectionViewLayout {
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.33), heightDimension: .fractionalHeight(1))
@@ -126,6 +137,7 @@ class MainViewController: UIViewController {
         
     }
     
+    //MARK: - func for scroll to the top with button
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let offsetY = scrollView.contentOffset.y
@@ -162,9 +174,11 @@ extension MainViewController: UISearchBarDelegate {
         
         if searchText == "" {
             fistresponse()
+            //MARK: - timer when user write
         } else { timer?.invalidate()
             timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false, block: { [self] _ in
                 apiCaller.searchByWord(string: searchText) { [weak self] (result) in
+                    self!.customLoaderView.alpha = 1
                     switch result {
                     case .success(let apiResponse):
                         photoModels = apiResponse.photos.photo.compactMap({
@@ -175,6 +189,7 @@ extension MainViewController: UISearchBarDelegate {
                             )
                         })
                         DispatchQueue.main.async {
+                            self!.customLoaderView.alpha = 0
                             self?.imageCollectionView.reloadData()
                         }
                     case .failure(let error):
@@ -183,8 +198,6 @@ extension MainViewController: UISearchBarDelegate {
                 }
             }
             )}
-        
-        
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
@@ -209,10 +222,6 @@ extension MainViewController: UICollectionViewDelegate, UICollectionViewDataSour
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return photoModels.count
     }
-    
-    //    func numberOfSections(in collectionView: UICollectionView) -> Int {
-    //        3
-    //    }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = imageCollectionView.dequeueReusableCell(withReuseIdentifier: ImagesCollectionViewCell.identifier, for: indexPath) as! ImagesCollectionViewCell

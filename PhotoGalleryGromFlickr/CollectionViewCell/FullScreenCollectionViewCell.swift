@@ -22,13 +22,25 @@ class FullScreenCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    //MARK: - func to load image with activity indicator
     func loadImage(urlString: String) {
+        let activityIndicator = UIActivityIndicatorView(style: .medium)
+        activityIndicator.frame = CGRect(x: 0, y: 0, width: 64, height: 64)
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.startAnimating()
+        activityIndicator.center = CGPoint(x: self.frame.size.width/2, y: self.frame.size.height/2)
+        self.addSubview(activityIndicator)
+        contentMode = .scaleToFill
+        self.fullScreenImageView.image = nil
+        
         DispatchQueue.global().async { [weak self] in
             guard let url = URL(string: urlString) else { return }
             
             guard let data = try? Data(contentsOf: url) else { return }
             DispatchQueue.main.async {
+                
                 self?.fullScreenImageView.image = UIImage(data: data)
+                activityIndicator.stopAnimating()
                 print(data)
             }
         }
@@ -40,6 +52,5 @@ class FullScreenCollectionViewCell: UICollectionViewCell {
         fullScreenImageView.center = contentView.center
         fullScreenImageView.contentMode = .scaleAspectFit
     }
-    
     
 }
